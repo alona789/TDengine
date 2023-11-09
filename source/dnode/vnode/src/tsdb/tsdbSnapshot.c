@@ -1535,6 +1535,7 @@ int32_t tsdbSnapGetDetails(SVnode* pVnode, SSnapshot* pSnap) {
   int32_t            subTyps[TSDB_RETENTION_MAX] = {SNAP_DATA_TSDB, SNAP_DATA_RSMA1, SNAP_DATA_RSMA2};
   STsdbSnapPartList* pLists[TSDB_RETENTION_MAX] = {0};
 
+  // get part list
   for (int32_t j = 0; j < tsdbMaxCnt; ++j) {
     STsdb* pTsdb = SMA_RSMA_GET_TSDB(pVnode, j);
     pLists[j] = tsdbGetSnapPartList(pTsdb->pFS);
@@ -1567,9 +1568,6 @@ int32_t tsdbSnapGetDetails(SVnode* pVnode, SSnapshot* pSnap) {
 
   // fill snapshot info
   for (int32_t j = 0; j < tsdbMaxCnt; ++j) {
-    if (pSnap->type == TDMT_SYNC_PREP_SNAPSHOT_REPLY) {
-    }
-
     //  subHead
     SSyncTLV* subHead = (void*)((char*)data + offset);
     subHead->typ = subTyps[j];
@@ -1583,6 +1581,7 @@ int32_t tsdbSnapGetDetails(SVnode* pVnode, SSnapshot* pSnap) {
     offset += sizeof(SSyncTLV) + tlen;
   }
 
+  // total length of subfields
   head->len = offset - sizeof(SSyncTLV);
   ASSERT(offset <= bufLen);
   code = 0;
