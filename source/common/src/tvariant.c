@@ -169,11 +169,18 @@ int32_t toIntegerEx(const char *z, int32_t n, int64_t *value) {
   int32_t  code = parseSignAndUInteger(z, n, &is_neg, &uv);
   if (code == TSDB_CODE_SUCCESS) {
     // truncate into int64
-    if (uv > INT64_MAX) {
-      *value = is_neg ? INT64_MIN : INT64_MAX;
-      return TSDB_CODE_FAILED;
+    if (is_neg) {
+      if (uv - 1 > INT64_MAX) {
+        *value = INT64_MIN;
+        return TSDB_CODE_FAILED;
+      }
+      *value = -uv;
     } else {
-      *value = is_neg ? -uv : uv;
+      if (uv > INT64_MAX) {
+        *value = INT64_MAX;
+        return TSDB_CODE_FAILED;
+      }
+      *value = uv;
     }
   }
 
@@ -189,6 +196,7 @@ int32_t toUIntegerEx(const char *z, int32_t n, uint64_t *value) {
   bool    is_neg = false;
   int32_t code = parseSignAndUInteger(z, n, &is_neg, value);
   if (is_neg) {
+    *value = 0;
     return TSDB_CODE_FAILED;
   }
   return code;
