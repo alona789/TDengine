@@ -58,7 +58,7 @@ TEST(testCase, toUIntegerEx_test) {
   ASSERT_EQ(ret, 0);
   ASSERT_EQ(val, 6);
 
-  s = "2567.8787";
+  s = "2567.4787";
   ret = toUIntegerEx(s, strlen(s), &val);
   ASSERT_EQ(ret, 0);
   ASSERT_EQ(val, 2567);
@@ -66,7 +66,7 @@ TEST(testCase, toUIntegerEx_test) {
   s = "1.869895343e4";
   ret = toUIntegerEx(s, strlen(s), &val);
   ASSERT_EQ(ret, 0);
-  ASSERT_EQ(val, 18698);
+  ASSERT_EQ(val, 18699);
 
   s = "-1";
   ret = toUIntegerEx(s, strlen(s), &val);
@@ -161,12 +161,12 @@ TEST(testCase, toIntegerEx_test) {
   s = "-80.9999";
   ret = toIntegerEx(s, strlen(s), &val);
   ASSERT_EQ(ret, 0);
-  ASSERT_EQ(val, -80);
+  ASSERT_EQ(val, -81);
 
   s = "2567.8787";
   ret = toIntegerEx(s, strlen(s), &val);
   ASSERT_EQ(ret, 0);
-  ASSERT_EQ(val, 2567);
+  ASSERT_EQ(val, 2568);
 
   s = "-5.2343544534e10";
   ret = toIntegerEx(s, strlen(s), &val);
@@ -176,7 +176,7 @@ TEST(testCase, toIntegerEx_test) {
   s = "1.869895343e4";
   ret = toIntegerEx(s, strlen(s), &val);
   ASSERT_EQ(ret, 0);
-  ASSERT_EQ(val, 18698);
+  ASSERT_EQ(val, 18699);
 
   // INT64_MAX
   s = "9223372036854775807";

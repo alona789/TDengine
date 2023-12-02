@@ -83,7 +83,7 @@ int32_t parseSignAndUInteger(const char *z, int32_t n, bool *is_neg, uint64_t *v
     has_sign = true;
   } else if (z[0] == '+') {
     has_sign = true;
-  } else if (z[0] < '0' || z[0] > '9') {
+  } else if (z[0] != '.' && (z[0] < '0' || z[0] > '9')) {
     return TSDB_CODE_FAILED;
   }
   if (has_sign) {
@@ -127,6 +127,8 @@ int32_t parseSignAndUInteger(const char *z, int32_t n, bool *is_neg, uint64_t *v
     return parseDecimalUInteger(z, n, value);
   }
 
+  // when parse 9223372036854775807, strtod faster than strtoll
+  // but loss of accuracy, res change to 9223372036854775808
   // parsing as double
   errno = 0;
   char  *endPtr = NULL;
@@ -134,7 +136,7 @@ int32_t parseSignAndUInteger(const char *z, int32_t n, bool *is_neg, uint64_t *v
   if (errno == ERANGE || errno == EINVAL || endPtr - z != n || !IS_VALID_UINT64(val)) {
     return TSDB_CODE_FAILED;
   }
-  *value = val;
+  *value = round(val);
   return TSDB_CODE_SUCCESS;
 }
 
@@ -170,11 +172,14 @@ int32_t toIntegerEx(const char *z, int32_t n, int64_t *value) {
   if (code == TSDB_CODE_SUCCESS) {
     // truncate into int64
     if (is_neg) {
-      if (uv - 1 > INT64_MAX) {
+      if (uv == 0) {
+        *value = 0;
+      } else if (uv > 1ull + INT64_MAX) {
         *value = INT64_MIN;
         return TSDB_CODE_FAILED;
+      } else {
+        *value = -uv;
       }
-      *value = -uv;
     } else {
       if (uv > INT64_MAX) {
         *value = INT64_MAX;
