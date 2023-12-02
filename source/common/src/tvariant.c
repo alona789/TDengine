@@ -106,8 +106,8 @@ int32_t parseSignAndUInteger(const char *z, int32_t n, bool *is_neg, uint64_t *v
     }
   }
 
-  //rm flag u-unsigned, l-long, f-float(if not in hex str)
-  char last = tolower(z[n-1]);
+  // rm flag u-unsigned, l-long, f-float(if not in hex str)
+  char last = tolower(z[n - 1]);
   if (last == 'u' || last == 'l' || last == 'f') {
     n--;
     if (n < 1) {
@@ -196,7 +196,9 @@ int32_t toUIntegerEx(const char *z, int32_t n, uint64_t *value) {
   bool    is_neg = false;
   int32_t code = parseSignAndUInteger(z, n, &is_neg, value);
   if (is_neg) {
-    *value = 0;
+    if (TSDB_CODE_SUCCESS == code && 0 == *value) {
+      return TSDB_CODE_SUCCESS;
+    }
     return TSDB_CODE_FAILED;
   }
   return code;
