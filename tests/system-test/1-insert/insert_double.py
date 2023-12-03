@@ -13,12 +13,16 @@ class TDTestCase:
 
     def init(self, conn, logSql, replicaVar=1):
         self.replicaVar = int(replicaVar)
+        self.db = "db1"
         tdLog.debug(f"start to excute {__file__}")
         tdSql.init(conn.cursor(), False)
 
+    def prepare_db(self):
+        tdSql.execute(f"drop database if exists {self.db}")
+        tdSql.execute(f"create database {self.db}")
+        tdSql.execute(f"use {self.db}")
+
     def case(self, table_name):
-        tdSql.execute("create database if not exists db1")
-        tdSql.execute("use db1")
         tdSql.execute(f"drop table if exists {table_name}")
         tdSql.execute(f"create table {table_name}(ts timestamp, i1 tinyint, i2 tinyint unsigned);")
 
@@ -45,8 +49,6 @@ class TDTestCase:
         tdSql.checkRows(16)
 
     def test_limit(self, table_name, dtype, bits):
-        tdSql.execute("create database if not exists db1")
-        tdSql.execute("use db1")
         tdSql.execute(f"drop table if exists {table_name}")
         tdSql.execute(f"create table {table_name}(ts timestamp, i1 {dtype}, i2 {dtype} unsigned);")
 
@@ -72,9 +74,30 @@ class TDTestCase:
         tdSql.query(f"select * from {table_name}")
         tdSql.checkRows(4)
 
+    def test_tags(self, stable_name, dtype, bits):
+        tdSql.execute(f"create stable {stable_name}(ts timestamp, i1 {dtype}, i2 {dtype} unsigned) tags(id {dtype})")
+
+        baseval = 2**(bits/2)
+        negval = -baseval + 1.645
+        posval = baseval + 4.323
+
+        bigval = 2**(bits-1)
+        max_i = bigval - 1
+        min_i = -bigval
+        max_u = 2*bigval - 1
+        min_u = 0
+        print("val:", baseval, negval, posval, max_i)
+        tdSql.execute(f"insert into {stable_name}_1 using {stable_name} tags({negval}) values(now, {negval}, {posval})")
+        tdSql.execute(f"insert into {stable_name}_2 using {stable_name} tags({posval}) values(now, -{baseval} , {baseval})")
+        tdSql.execute(f"insert into {stable_name}_3 using {stable_name} tags(0x40) values(now, {max_i}, {max_u})")
+        tdSql.execute(f"insert into {stable_name}_4 using {stable_name} tags(0b10000) values(now, {min_i}, {min_u})")
+
+        tdSql.query(f"select * from {stable_name}")
+        tdSql.checkRows(4)
+
     def run(self):  # sourcery skip: extract-duplicate-method, remove-redundant-fstring
         tdSql.prepare(replica = self.replicaVar)
-
+        self.prepare_db()
         self.case("t1")
         tdLog.printNoPrefix("==========end case1 run ...............")
 
@@ -82,6 +105,12 @@ class TDTestCase:
         self.test_limit("t2", "int", 32)
         self.test_limit("t2", "smallint", 16)
         self.test_limit("t2", "tinyint", 8)
+        tdLog.printNoPrefix("==========end case2 run ...............")
+
+        self.test_tags("t_big", "bigint", 64)
+        self.test_tags("t2_int", "int", 32)
+        self.test_tags("t_small", "smallint", 16)
+        self.test_tags("t_tiny", "tinyint", 8)
         tdLog.printNoPrefix("==========end case2 run ...............")
 
     def stop(self):
