@@ -1422,7 +1422,7 @@ static int32_t parseValueTokenImpl(SInsertParseContext* pCxt, const char** pSql,
     case TSDB_DATA_TYPE_UBIGINT: {
       int32_t code = toUIntegerEx(pToken->z, pToken->n, &pVal->value.val);
       if (TSDB_CODE_SUCCESS != code) {
-        return buildSyntaxErrMsg(&pCxt->msg, "invalid unsigned int data", pToken->z);
+        return buildSyntaxErrMsg(&pCxt->msg, "invalid unsigned bigint data", pToken->z);
       }
       break;
     }
