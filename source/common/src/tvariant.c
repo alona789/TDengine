@@ -160,6 +160,22 @@ int32_t removeSpace(const char **pp, int32_t n) {
   return n;
 }
 
+int32_t toDoubleEx(const char *z, int32_t n, double* value) {
+  n = removeSpace(&z, n);
+  if (n < 1) {  // fail: all char is space
+    return TSDB_CODE_FAILED;
+  }
+  
+  errno = 0;
+  char* endPtr = NULL;
+  *value = taosStr2Double(z, &endPtr);
+
+  if (errno == ERANGE || errno == EINVAL || endPtr - z != n) {
+    return TSDB_CODE_FAILED;
+  }
+  return TSDB_CODE_SUCCESS;
+}
+
 int32_t toIntegerEx(const char *z, int32_t n, int64_t *value) {
   if (n == 0) {
     *value = 0;
